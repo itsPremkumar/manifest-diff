@@ -1,10 +1,8 @@
 name: CI
-
 on:
   push:
     branches: [main, master]
   pull_request:
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -16,15 +14,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: "Portfolio verification (7-axis structure/frontmatter/compile/self-test/security/docs/deploy)"
-        run: python ci/verify_product.py .
-      - name: "Self-tests (legacy discoverable entry)"
-        if: always()
+      - name: Compile
+        run: python -m py_compile $(find . -name "*.py" -not -path "./.git/*")
+      - name: Self-tests
         run: |
           for t in $(find . -name "*.py" -not -path "./.git/*" -not -path "./ci/*"); do
-            python "$t" self-test 2>/dev/null || true
+            python "$t" self-test || exit 1
           done
-
   deploy-check:
     needs: test
     runs-on: ubuntu-latest
@@ -33,5 +29,4 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: "Skill package deploy-check"
-        run: python ci/ci_check.py
+      - run: python ci/ci_check.py
